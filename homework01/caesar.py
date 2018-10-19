@@ -9,8 +9,16 @@ def encrypt_caesar(plaintext):
     >>> encrypt_caesar("")
     ''
     """
-    # PUT YOUR CODE HERE
-    return ciphertext
+    cliphertext = ''
+    for alp in plaintext:
+        if (alp >= 'a') and (alp <= 'z') or (alp >= 'A') and (alp <= 'Z'):
+            code = ord(alp) + 3
+            if ord ('a') > code > ord('Z') or code > ord('z'):
+                code -= 26
+            cliphertext += chr(code)
+        else:
+            cliphertext += alp
+    return cliphertext
 
 
 def decrypt_caesar(ciphertext):
@@ -24,5 +32,16 @@ def decrypt_caesar(ciphertext):
     >>> decrypt_caesar("")
     ''
     """
-    # PUT YOUR CODE HERE
+    plaintext = ''
+    for alp in plaintext:
+        if (alp >= 'a' and alp <= 'z') or (alp >= 'A' and alp <= 'Z'):
+            code = ord(alp) + 3
+            if ord ('a') > code > ord('Z') or code > ('z'):
+                code -= 26
+            cliphertext += chr(code)
+        else:
+            cliphertext += alp
+
+    
     return plaintext
+

@@ -11,7 +11,7 @@ def is_prime(n):
         if n % i == 0:
             return False
     return True
-    pass
+
 
 def generate_keypair(p, q):
     if not (is_prime(p) and is_prime(q)):
@@ -20,10 +20,10 @@ def generate_keypair(p, q):
         raise ValueError('p and q cannot be equal')
 
     # n = pq
-    # PUT YOUR CODE HERE
+    n = p * q
 
     # phi = (p-1)(q-1)
-    # PUT YOUR CODE HERE
+    phi = (p - 1) * (q - 1)
 
     # Choose an integer e such that e and phi(n) are coprime
     e = random.randrange(1, phi)
@@ -39,4 +39,39 @@ def generate_keypair(p, q):
     # Return public and private keypair
     # Public key is (e, n) and private key is (d, n)
     return ((e, n), (d, n))
+
+def gcd(a, b):
+    """
+    >>> gcd(12, 15)
+    3
+    >>> gcd(3, 7)
+    1
+    """
+    if b==0:
+        return a
+    else:
+        return gcd(b, a%b)
+    
+
+
+
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

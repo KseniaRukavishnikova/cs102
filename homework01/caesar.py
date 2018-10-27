@@ -42,6 +42,5 @@ def decrypt_caesar(ciphertext):
         else:
             cliphertext += alp
 
-    
     return plaintext
 

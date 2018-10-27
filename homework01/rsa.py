@@ -66,27 +66,3 @@ def multiplicative_inverse(e, phi):
 
     d, x, y = gcdex(e, phi)
     return x % phi
-    
-
-
-
-    
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

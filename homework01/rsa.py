@@ -51,6 +51,21 @@ def gcd(a, b):
         return a
     else:
         return gcd(b, a%b)
+
+def multiplicative_inverse(e, phi):
+    """
+    >>> multiplicative_inverse(7, 40)
+    23
+    """
+    def gcdex(a, b):
+        if b == 0:
+            return a, 1, 0
+        else:
+            d, x, y = gcdex(b, a % b)
+            return d, y, x - y * (a // b)
+
+    d, x, y = gcdex(e, phi)
+    return x % phi
     
 
 

@@ -1,5 +1,6 @@
 import random
 
+
 def is_prime(n):
     """
     >>> is_prime(2)
@@ -14,6 +15,7 @@ def is_prime(n):
             return False
     return True
 
+
 def gcd(a, b):
     """
     >>> gcd(12, 15)
@@ -21,10 +23,11 @@ def gcd(a, b):
     >>> gcd(3, 7)
     1
     """
-    if b==0:
+    if b == 0:
         return a
     else:
-        return gcd(b, a%b)
+        return gcd(b, a % b)
+
 
 def multiplicative_inverse(e, phi):
     """
@@ -40,6 +43,7 @@ def multiplicative_inverse(e, phi):
 
     d, x, y = gcdex(e, phi)
     return x % phi
+
 
 def generate_keypair(p, q):
     if not (is_prime(p) and is_prime(q)):
@@ -67,6 +71,7 @@ def generate_keypair(p, q):
     # Return public and private keypair
     # Public key is (e, n) and private key is (d, n)
     return ((e, n), (d, n))
+
 
 def encrypt(pk, plaintext):
     # Unpack the key into it's components

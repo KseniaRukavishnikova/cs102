@@ -1,3 +1,5 @@
+import random
+
 def is_prime(n):
     """
     >>> is_prime(2)
@@ -38,8 +40,6 @@ def multiplicative_inverse(e, phi):
 
     d, x, y = gcdex(e, phi)
     return x % phi
-
-
 
 def generate_keypair(p, q):
     if not (is_prime(p) and is_prime(q)):
@@ -101,5 +101,3 @@ if __name__ == '__main__':
     print("Decrypting message with public key ", public, " . . .")
     print("Your message is:")
     print(decrypt(public, encrypted_msg))
-
-

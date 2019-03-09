@@ -1,95 +1,87 @@
 from collections import Counter
-import csv
-import string
 import math
 
 
 class NaiveBayesClassifier:
-
-    def __init__(self, alpha=1):
+    def __init__(self, alpha=0.05):
         self.alpha = alpha
 
     def fit(self, X, y):
-        """ Fit Naive Bayes classifier according to X, y. """
-        working_data = []
-        all_words = []
-        self.all_labels = list(set(y))
-        self.label_list = dict.fromkeys(self.all_labels, 0)
+        """ Fit Naive Bayes classifier according to X, y."""
+        lst = []
+        for sentence, clss in zip(X, y):
+            for word in sentence.split():
+                lst.append((word, clss))
+        self.words_labels = Counter(lst)
+        print("words_labels", self.words_labels)
+        self.counted_labels = dict(Counter(y))
+        print("counted_labels", self.counted_labels)
+        words = [word for sentence in X for word in sentence.split()]
+        self.counted_words = dict(Counter(words))
+        print("counted_words", self.counted_words)
 
-        for message, label in zip(X, y):
-            words = message.split()
-            for word in words:
-                working_data.append((word, label))
-                all_words.append(word)
-                self.label_list[label] += 1
+        self.model = {
+            'labels': {},
+            'words': {},
+        }
 
-        self.word_list = Counter(working_data)
-        self.all_words = list(set(all_words))
+        for var_label in self.counted_labels:
+            params = {
+                'count_by_label': self.count_words(var_label),
+                'likelihood': self.counted_labels[var_label] / len(y),
+            }
 
-        self.word_probability = dict.fromkeys(self.all_words, dict.fromkeys(self.label_list))
+            self.model['labels'][var_label] = params
 
-        for word in self.all_words:
-            for label in self.all_labels:
-                nic = self.word_list[(word, label)]
-                nc = self.label_list[label]
-                d = len(self.all_words)
-                self.word_probability[word][label] = (nic + self.alpha)/(nc + d * self.alpha)
+        for word in self.counted_words:
+            params = {}
 
-        self.label_probability = dict.fromkeys(self.all_labels)
-        message_labels = Counter(y)
-        for label in self.all_labels:
-            self.label_probability[label] = message_labels[label]/len(y)
+            for var_label in self.counted_labels:
+                params[var_label] = self.smoothing_likelihood(word, var_label)
+
+            self.model['words'][word] = params
+
+        # print("model: ", self.model)
 
     def predict(self, X):
-        """ Perform classification on an array of test vectors X. """
-        predict_list = []
-        for message in X:
-            predict_labels = []
-            words = message.split()
+        words = X.split()
+        likely_labels = []
+        for cur_label in self.model['labels']:
+            likelihood = self.model['labels'][cur_label]['likelihood']
+            total_score = math.log(likelihood, math.e)
+            for word in words:
+                word_dict = self.model['words'].get(word, None)
+                if word_dict:
+                    total_score += math.log(word_dict[cur_label], math.e)
+            likely_labels.append((total_score, cur_label))
+        _, answer = max(likely_labels)
+        return answer
 
-            for label in self.label_list:
-                current = self.label_probability[label]
-
-                for word in words:
-                    score = self.word_probability.get(word, None)
-                    if score:
-                        current += score[label]
-
-                predict_labels.append((current, label))
-
-            _, ans = max(predict_labels)
-            predict_list.append(ans)
-
-        return predict_list
 
     def score(self, X_test, y_test):
-        """ Returns the mean accuracy on the given test data and labels. """
-        prediction = self.predict(X_test)
         correct = 0
-        for i in range(len(y_test)):
-            if prediction[i] == y_test[i]:
+        for i in range(len(X_test)):
+            answer = self.predict(X_test[i])
+            if answer == y_test[i]:
                 correct += 1
 
-        return correct/len(y_test)
+        return correct / len(y_test)
 
+    def smoothing_likelihood(self, word, cur_label):
+        """ Returns the smoothed likelihood with the given word and label in loop. """
+        nc = self.model['labels'][cur_label]['count_by_label']
+        nic = self.words_labels.get((word, cur_label), 0)
+        d = len(self.counted_words)
+        alpha = self.alpha
 
+        return (nic + alpha) / (nc + alpha * d)
 
-with open("SMSSpamCollection") as f:
-    data = list(csv.reader(f, delimiter="\t"))
+    def count_words(self, cur_label):
+        """ Returns the count of words with the given label. """
+        count = 0
 
-    def clean(s):
-        translator = str.maketrans("", "", string.punctuation)
-        return s.translate(translator)
-        
+        for word, label_name in self.words_labels:
+            if cur_label == label_name:
+                count += self.words_labels[(word, cur_label)]
 
-X, y = [], []
-for target, msg in data:
-    X.append(msg)
-    y.append(target)
-
-X = [clean(x).lower() for x in X]
-X_train, y_train, X_test, y_test = X[:3900], y[:3900], X[3900:], y[3900:]
-
-model = NaiveBayesClassifier(1)
-model.fit(X_train, y_train)
-print(model.score(X_test, y_test))
+        return count

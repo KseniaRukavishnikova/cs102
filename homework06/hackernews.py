@@ -1,50 +1,48 @@
 from bottle import (
-    route, run, template, request, redirect, static_file
+    route, run, template, request, redirect
 )
-
+import bottle
+import string
+import os
 from scraputils import get_news
 from db import News, session
 from bayes import NaiveBayesClassifier
-import string
-
-
-
-s = session()
-classifier = NaiveBayesClassifier()
-mark_news = s.query(News).filter(News.label != None).all()
-x_title = [row.title for row in mark_news]
-y_lable = [row.label for row in mark_news]
-classifier.fit(x_title, y_lable)
 
 
 @route("/news")
 def news_list():
     s = session()
     rows = s.query(News).filter(News.label == None).all()
-    return template('news_template', rows=rows)
+    return template("news_template", rows=rows)
 
 
 @route("/add_label/")
 def add_label():
-    news_id = request.query.id
-    label = request.query.label
-    c = session()
-    qurent = c.query(News).filter(News.id == news_id).one()
-    qurent.label = label
-    c.commit()
+    s = session()
+    news = s.query(News).filter(News.id == request.query.id).one()
+    news.label = request.query.label
+    s.commit()
     redirect("/news")
 
 
 @route("/update")
 def update_news():
     s = session()
-    latest_news = get_news("https://news.ycombinator.com/newest", n_pages=5)
-    authors = [news['author'] for news in latest_news]
-    titles = s.query(News.title).filter(News.author.in_(authors)).subquery()
-    existing_news = s.query(News).filter(News.title.in_(titles)).all()
-    for item in latest_news:
-        if not existing_news or item not in existing_news:
-            s.add(News(**item))
+    news_list = get_news("https://news.ycombinator.com/newest", n_pages=5)
+    news_list_bd = s.query(News).all()
+    if len(news_list_bd) > 0:
+        for new_news in news_list:
+            f = False
+            for old_news_bd in news_list_bd:
+                if new_news['author'] == old_news_bd.author and new_news['title'] == old_news_bd.title:
+                    f = True
+                    break
+            if not f:
+                s.add(News(**new_news))
+
+    else:
+        for new_news in news_list:
+            s.add(News(**new_news))
     s.commit()
     redirect("/news")
 
@@ -60,7 +58,7 @@ def classify_news():
     rows = s.query(News).filter(News.label == None).all()
     good, maybe, never = [], [], []
     for row in rows:
-        prediction = classifier.predict([clean(row.title)])
+        prediction = classifier.predict(clean(row.title))
         if prediction == 'good':
             good.append(row)
         elif prediction == 'maybe':
@@ -77,4 +75,8 @@ def clean(s):
 
 
 if __name__ == "__main__":
+    abs_app_dir_path = os.path.dirname(os.path.realpath(__file__))
+    abs_views_path = os.path.join(abs_app_dir_path, 'templates')
+    bottle.TEMPLATE_PATH.insert(0, abs_views_path)
+    classifier = NaiveBayesClassifier()
     run(host="localhost", port=8080)
